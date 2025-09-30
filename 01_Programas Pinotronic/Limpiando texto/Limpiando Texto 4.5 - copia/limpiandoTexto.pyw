@@ -21,6 +21,7 @@ class FRMLimpiandoTexto:
         self.textoParaModificar = StringVar()
         self.textoqueSustituira = StringVar()
         self.DirectorioArchivo = StringVar()
+        self.usarIA = tk.BooleanVar(value=True)  # Nueva variable para controlar IA
 
         self.style = ttk.Style()
         self.style.theme_use('winnative')
@@ -64,7 +65,33 @@ class FRMLimpiandoTexto:
         self.btnSalir = tk.Button(self.top, text="🔒", font=("Segoe UI",18), command=self.salir)
         self.btnSalir.place(relx=0.954, rely=0.933, height=34, width=47)
 
+        # Controles de IA
+        self.chkIA = tk.Checkbutton(
+            self.top, 
+            text="🧠 Usar IA", 
+            variable=self.usarIA,
+            font=("Arial", 12, "bold"),
+            fg="#00ff00",
+            bg="#004040",
+            activeforeground="#00ff00",
+            activebackground="#004040",
+            selectcolor="#004040",
+            command=self.toggleIA
+        )
+        self.chkIA.place(relx=0.007, rely=0.01, height=25, width=120)
+
+        # Indicador de estado de IA
+        self.lblEstadoIA = tk.Label(
+            self.top, 
+            text="", 
+            font=("Arial", 10),
+            fg="#ffff00",
+            bg="#004040"
+        )
+        self.lblEstadoIA.place(relx=0.15, rely=0.015, height=20, width=200)
+
         self.Operativo = Operativo()
+        self.actualizarEstadoIA()
 
     def cargarTexton(self):
         self.txtCajaTexto.delete(1.0, END)
@@ -92,10 +119,49 @@ class FRMLimpiandoTexto:
 
     def realizarProceso(self):
         textoOriginal = self.txtCajaTexto.get(1.0, END)
-        TextoRecibido = self.Operativo.realizandoProceso(textoOriginal)
-        self.txtCajaTexto.config(state=NORMAL)
-        self.txtCajaTexto.delete(1.0, END)
-        self.txtCajaTexto.insert(END, TextoRecibido)
+        usar_ia = self.usarIA.get()
+        
+        # Mostrar indicador de procesamiento
+        modo = "IA" if usar_ia else "Básico"
+        self.lblEstadoIA.config(text=f"🔄 Procesando con modo {modo}...")
+        self.top.update()
+        
+        try:
+            TextoRecibido = self.Operativo.realizandoProceso(textoOriginal, usar_ia=usar_ia)
+            self.txtCajaTexto.config(state=NORMAL)
+            self.txtCajaTexto.delete(1.0, END)
+            self.txtCajaTexto.insert(END, TextoRecibido)
+            
+            # Actualizar estado
+            self.actualizarEstadoIA()
+            
+        except Exception as e:
+            self.lblEstadoIA.config(text=f"❌ Error: {str(e)[:30]}...")
+            print(f"Error en procesamiento: {e}")
+    
+    def toggleIA(self):
+        """Alterna el uso de IA y actualiza el estado"""
+        self.actualizarEstadoIA()
+    
+    def actualizarEstadoIA(self):
+        """Actualiza el indicador de estado de IA"""
+        estado = self.Operativo.estado_ia()
+        usar_ia = self.usarIA.get()
+        
+        if not estado['disponible']:
+            self.lblEstadoIA.config(text="⚠️ IA no disponible - instala 'requests'")
+            self.usarIA.set(False)
+            self.chkIA.config(state="disabled")
+        elif not estado['inicializada']:
+            self.lblEstadoIA.config(text="⚠️ Configura API key en config_ia.py")
+            self.usarIA.set(False)
+        elif usar_ia and estado['habilitada']:
+            self.lblEstadoIA.config(text="✅ Modo IA activado")
+        elif usar_ia and not estado['habilitada']:
+            self.lblEstadoIA.config(text="❌ IA configurada incorrectamente")
+            self.usarIA.set(False)
+        else:
+            self.lblEstadoIA.config(text="🔧 Modo básico activado")
 
     def guardando(self):
         textoOriginal = self.txtCajaTexto.get(1.0, END)

@@ -89,41 +89,31 @@ class Operativo:
         return ContenedorTexto
     
     def realizandoProcesoConIA(self, Textos):
-        """Procesamiento mejorado con IA de DeepSeek"""
+        """
+        Procesamiento híbrido: PRIMERO procesamiento básico completo, 
+        DESPUÉS refinamiento con IA
+        """
         try:
             print("🧠 Procesando con IA DeepSeek...")
             
-            # Análisis preliminar del documento
-            info_doc = self.procesador_ia.detectar_tipo_documento(Textos)
+            # PASO 1: Ejecutar TODO el procesamiento básico original primero
+            print("� Paso 1: Ejecutando procesamiento básico completo...")
+            texto_procesado_basico = self.realizandoProcesoBasico(Textos)
+            
+            # PASO 2: Análisis del tipo de documento para la IA
+            info_doc = self.procesador_ia.detectar_tipo_documento(texto_procesado_basico)
             print(f"📄 Tipo de documento detectado: {info_doc.get('tipo', 'desconocido')}")
             
-            # Procesamiento básico inicial (limpieza simple)
-            ContenedorTexto = Textos.replace(',', ', ')
-            ContenedorTexto = ContenedorTexto.replace('\uf0fc ', '')
-            ContenedorTexto = self.cambiandoBullets(ContenedorTexto)
-            # Saltamos las funciones problemáticas y usamos IA en su lugar
-            ContenedorTexto = ' '.join(ContenedorTexto.split())
-            ContenedorTexto = self.cambiandoBulletsdeCinco(ContenedorTexto)
-            ContenedorTexto= ContenedorTexto.replace('\x0c', '\n ')
-            ContenedorTexto = self.limpiarTextodeSaltoLinea(ContenedorTexto)
+            # PASO 3: Refinamiento final con IA
+            print("🤖 Paso 2: Refinamiento inteligente con IA...")
+            texto_final = self.procesador_ia.refinar_texto_procesado(texto_procesado_basico, info_doc)
             
-            # Aquí es donde la IA hace la magia - reemplaza las funciones problemáticas
-            ContenedorTexto = self.procesador_ia.corregir_puntuacion_inteligente(ContenedorTexto)
-            
-            # Continuamos con el procesamiento básico final
-            ContenedorTexto = self.arreglandoNumros(ContenedorTexto)
-            ContenedorTexto = self.arregloIncisos(ContenedorTexto)
-            
-            # Procesamiento final con IA para optimizar
-            ContenedorTexto = self.procesador_ia.limpiar_texto_inteligente(ContenedorTexto)
-            
-            ContenedorTexto = ContenedorTexto.lstrip()
-            print("✅ Procesamiento con IA completado")
-            return ContenedorTexto
+            print("✅ Procesamiento híbrido completado (Básico + IA)")
+            return texto_final
             
         except Exception as e:
             print(f"❌ Error en procesamiento IA: {e}")
-            print("🔄 Fallback a procesamiento básico...")
+            print("🔄 Fallback: devolviendo resultado de procesamiento básico...")
             return self.realizandoProcesoBasico(Textos)
     def cambiandoBullets(self,CambiandolosPuntos):
         CambiandolosPuntos = CambiandolosPuntos +"XXXX"
@@ -161,15 +151,12 @@ class Operativo:
         return TextoFinal
     def colocandoPuntosDespuesRenglon(self,ContenedorTexto):
         """
-        Función mejorada - usa IA cuando está disponible, 
-        de lo contrario mantiene texto sin modificaciones
+        Función desactivada permanentemente - problemas de puntuación incorrecta
+        El refinamiento de puntuación se hace posteriormente con IA si está disponible
         """
-        if self.ia_habilitada and self.procesador_ia:
-            # Usar IA para corrección inteligente de puntuación
-            return self.procesador_ia.corregir_puntuacion_inteligente(ContenedorTexto)
-        else:
-            # Modo básico - no hace cambios para evitar errores
-            return ContenedorTexto
+        # Siempre devuelve el texto sin modificar
+        # La IA se encargará del refinamiento al final del proceso
+        return ContenedorTexto
     def colocandoPuntosEnDondeNoLosHay(self,ContenedorTexto):
         ContenedorTexto = ContenedorTexto +"XXXX"
         Casilla4 = ""

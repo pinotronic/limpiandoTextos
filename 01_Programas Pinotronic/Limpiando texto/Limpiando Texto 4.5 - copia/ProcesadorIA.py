@@ -233,6 +233,53 @@ class ProcesadorDeepSeek:
         resultado = self._llamar_api(prompt)
         return resultado if resultado else texto
     
+    def refinar_texto_procesado(self, texto_procesado: str, info_documento: Dict[str, Any]) -> str:
+        """
+        Refina un texto que ya fue procesado por el sistema básico
+        
+        Args:
+            texto_procesado (str): Texto ya procesado por las funciones básicas
+            info_documento (dict): Información sobre el tipo de documento
+            
+        Returns:
+            str: Texto refinado por IA
+        """
+        if not texto_procesado or len(texto_procesado.strip()) == 0:
+            return texto_procesado
+            
+        tipo_doc = info_documento.get('tipo', 'otro')
+        tiene_listas = info_documento.get('tiene_listas', False)
+        tiene_titulos = info_documento.get('tiene_titulos', False)
+        
+        prompt = f"""
+        REFINAMIENTO FINAL DE TEXTO YA PROCESADO
+        
+        El siguiente texto ya fue procesado por un sistema automático, pero necesita refinamiento final.
+        
+        INFORMACIÓN DEL DOCUMENTO:
+        - Tipo: {tipo_doc}
+        - Tiene listas: {tiene_listas}
+        - Tiene títulos: {tiene_titulos}
+        
+        INSTRUCCIONES ESPECÍFICAS:
+        1. SOLO haz mejoras sutiles y necesarias
+        2. NO cambies la estructura básica que ya fue establecida
+        3. Corrige errores evidentes de OCR que puedan haber quedado
+        4. Mejora la fluidez de lectura sin alterar el significado
+        5. Asegúrate de que la puntuación sea apropiada para el contexto
+        6. SI hay títulos o encabezados, mantenlos como están
+        7. SI hay listas, preserva su formato
+        8. NO agregues contenido nuevo, solo refina lo existente
+        
+        TEXTO YA PROCESADO A REFINAR:
+        {texto_procesado}
+        
+        Devuelve ÚNICAMENTE el texto refinado, sin explicaciones:
+        """
+        
+        resultado = self._llamar_api(prompt)
+        return resultado if resultado else texto_procesado
+    
     def validar_api_key(self) -> bool:
         """
         Valida que la API key funcione correctamente
