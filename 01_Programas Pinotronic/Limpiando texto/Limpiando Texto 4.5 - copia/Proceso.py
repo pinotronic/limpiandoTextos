@@ -13,6 +13,7 @@ class Operativo:
     def __init__(self):
         self.ia_habilitada = False
         self.procesador_ia = None
+        self.callback_progreso = None
         
         # Inicializar IA si está disponible
         if IA_DISPONIBLE and IA_CONFIG.get("habilitada", False):
@@ -44,6 +45,15 @@ class Operativo:
             "inicializada": self.procesador_ia is not None,
             "habilitada": self.ia_habilitada
         }
+    
+    def set_callback_progreso(self, callback):
+        """Establece la función callback para notificar progreso"""
+        self.callback_progreso = callback
+    
+    def _notificar_progreso(self, mensaje):
+        """Notifica progreso al callback si existe"""
+        if self.callback_progreso:
+            self.callback_progreso(mensaje)
     
     def sustitucionTexto(self,textoOriginal,texto1,texto2):
         return textoOriginal.replace(texto1, texto2)
@@ -94,21 +104,30 @@ class Operativo:
         DESPUÉS refinamiento con IA
         """
         try:
-            print("🧠 Procesando con IA DeepSeek...")
+            self._notificar_progreso("Iniciando procesamiento híbrido...")
             
             # PASO 1: Ejecutar TODO el procesamiento básico original primero
-            print("� Paso 1: Ejecutando procesamiento básico completo...")
+            self._notificar_progreso("Aplicando procesamiento básico completo...")
             texto_procesado_basico = self.realizandoProcesoBasico(Textos)
             
             # PASO 2: Análisis del tipo de documento para la IA
+            self._notificar_progreso("Analizando tipo de documento...")
             info_doc = self.procesador_ia.detectar_tipo_documento(texto_procesado_basico)
-            print(f"📄 Tipo de documento detectado: {info_doc.get('tipo', 'desconocido')}")
+            tipo_detectado = info_doc.get('tipo', 'desconocido')
             
             # PASO 3: Refinamiento final con IA
-            print("🤖 Paso 2: Refinamiento inteligente con IA...")
-            texto_final = self.procesador_ia.refinar_texto_procesado(texto_procesado_basico, info_doc)
+            self._notificar_progreso(f"Refinando texto ({tipo_detectado})...")
+            # Crear callback para el procesador IA
+            def callback_ia(mensaje):
+                self._notificar_progreso(mensaje)
             
-            print("✅ Procesamiento híbrido completado (Básico + IA)")
+            texto_final = self.procesador_ia.refinar_texto_procesado(
+                texto_procesado_basico, 
+                info_doc,
+                callback=callback_ia
+            )
+            
+            self._notificar_progreso("Procesamiento completado exitosamente")
             return texto_final
             
         except Exception as e:

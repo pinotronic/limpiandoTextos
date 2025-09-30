@@ -89,6 +89,16 @@ class FRMLimpiandoTexto:
             bg="#004040"
         )
         self.lblEstadoIA.place(relx=0.15, rely=0.015, height=20, width=200)
+        
+        # Indicador de progreso de trabajo (inicialmente oculto)
+        self.lblProgreso = tk.Label(
+            self.top,
+            text="",
+            font=("Arial", 12, "bold"),
+            fg="#00ff00",
+            bg="#004040"
+        )
+        self.lblProgreso.place(relx=0.35, rely=0.015, height=20, width=300)
 
         self.Operativo = Operativo()
         self.actualizarEstadoIA()
@@ -121,23 +131,58 @@ class FRMLimpiandoTexto:
         textoOriginal = self.txtCajaTexto.get(1.0, END)
         usar_ia = self.usarIA.get()
         
-        # Mostrar indicador de procesamiento
-        modo = "IA" if usar_ia else "Básico"
-        self.lblEstadoIA.config(text=f"🔄 Procesando con modo {modo}...")
-        self.top.update()
-        
         try:
-            TextoRecibido = self.Operativo.realizandoProceso(textoOriginal, usar_ia=usar_ia)
+            if usar_ia:
+                # Procesamiento con IA - mostrar progreso detallado
+                self.mostrarProgreso("🔄 Iniciando procesamiento...")
+                self.top.update()
+                
+                # Configurar callback de progreso para la IA
+                self.Operativo.set_callback_progreso(self.actualizar_progreso_ia)
+                
+                TextoRecibido = self.Operativo.realizandoProceso(textoOriginal)
+                
+                # Mostrar mensaje de completado
+                self.mostrarProgreso("✅ ¡IA completada! Texto procesado exitosamente", tiempo_mostrar=3000)
+            else:
+                # Procesamiento básico
+                self.mostrarProgreso("🔄 Procesando con modo básico...")
+                self.top.update()
+                
+                # Deshabilitar IA temporalmente para modo básico
+                self.Operativo.habilitar_ia(False)
+                TextoRecibido = self.Operativo.realizandoProceso(textoOriginal)
+                # Rehabilitar IA si estaba habilitada
+                if self.usarIA.get():
+                    self.Operativo.habilitar_ia(True)
+                
+                self.mostrarProgreso("✅ Procesamiento básico completado", tiempo_mostrar=2000)
+            
+            # Actualizar el texto
             self.txtCajaTexto.config(state=NORMAL)
             self.txtCajaTexto.delete(1.0, END)
             self.txtCajaTexto.insert(END, TextoRecibido)
             
-            # Actualizar estado
-            self.actualizarEstadoIA()
+            # Restaurar estado después de un momento
+            self.top.after(3000 if usar_ia else 2000, self.actualizarEstadoIA)
             
         except Exception as e:
-            self.lblEstadoIA.config(text=f"❌ Error: {str(e)[:30]}...")
+            self.mostrarProgreso(f"❌ Error: {str(e)[:40]}...", tiempo_mostrar=5000)
             print(f"Error en procesamiento: {e}")
+    
+    def mostrarProgreso(self, mensaje, tiempo_mostrar=None):
+        """Muestra un mensaje de progreso"""
+        self.lblProgreso.config(text=mensaje)
+        self.top.update()
+        
+        if tiempo_mostrar:
+            # Limpiar mensaje después del tiempo especificado
+            self.top.after(tiempo_mostrar, lambda: self.lblProgreso.config(text=""))
+    
+    def actualizar_progreso_ia(self, mensaje):
+        """Callback para actualizar progreso de IA"""
+        self.mostrarProgreso(f"🧠 {mensaje}")
+        self.top.update()
     
     def toggleIA(self):
         """Alterna el uso de IA y actualiza el estado"""

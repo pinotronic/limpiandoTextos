@@ -233,19 +233,23 @@ class ProcesadorDeepSeek:
         resultado = self._llamar_api(prompt)
         return resultado if resultado else texto
     
-    def refinar_texto_procesado(self, texto_procesado: str, info_documento: Dict[str, Any]) -> str:
+    def refinar_texto_procesado(self, texto_procesado: str, info_documento: Dict[str, Any], callback=None) -> str:
         """
         Refina un texto que ya fue procesado por el sistema básico
         
         Args:
             texto_procesado (str): Texto ya procesado por las funciones básicas
             info_documento (dict): Información sobre el tipo de documento
+            callback (callable): Función opcional para notificar progreso
             
         Returns:
             str: Texto refinado por IA
         """
         if not texto_procesado or len(texto_procesado.strip()) == 0:
             return texto_procesado
+        
+        if callback:
+            callback("Preparando refinamiento con IA...")
             
         tipo_doc = info_documento.get('tipo', 'otro')
         tiene_listas = info_documento.get('tiene_listas', False)
@@ -277,7 +281,17 @@ class ProcesadorDeepSeek:
         Devuelve ÚNICAMENTE el texto refinado, sin explicaciones:
         """
         
+        if callback:
+            callback("Enviando a DeepSeek API...")
+            
         resultado = self._llamar_api(prompt)
+        
+        if callback:
+            if resultado:
+                callback("IA finalizó el refinamiento")
+            else:
+                callback("Error en API - usando texto original")
+                
         return resultado if resultado else texto_procesado
     
     def validar_api_key(self) -> bool:
