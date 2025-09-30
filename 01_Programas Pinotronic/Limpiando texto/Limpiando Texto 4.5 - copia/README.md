@@ -4,12 +4,20 @@ Aplicación de escritorio desarrollada en Python con Tkinter para limpiar y proc
 
 ## Características
 
+### 🎯 Procesamiento Básico
 - **Limpieza automática de texto**: Procesa y mejora texto extraído de documentos OCR
 - **Corrección de formato**: Ajusta puntuación, espacios y estructura del texto
 - **Conversión de bullets**: Convierte diferentes tipos de viñetas a formato estándar
 - **Procesamiento de saltos de línea**: Maneja correctamente los saltos de línea en el texto
 - **Interfaz gráfica intuitiva**: Fácil de usar con botones para las operaciones más comunes
 - **Síntesis de voz**: Convierte el texto procesado a audio usando gTTS y pyttsx3
+
+### 🧠 Procesamiento con IA (DeepSeek)
+- **Corrección inteligente de errores OCR**: Detecta y corrige automáticamente errores típicos
+- **Análisis contextual**: Entiende el tipo de documento y ajusta el procesamiento
+- **Puntuación inteligente**: No agrega puntos incorrectos delante de títulos o nombres propios
+- **Preservación de formato**: Mantiene la estructura original cuando es apropiada
+- **Procesamiento híbrido**: Combina reglas tradicionales con IA para mejores resultados
 
 ## Archivos del proyecto
 
@@ -22,11 +30,16 @@ Aplicación de escritorio desarrollada en Python con Tkinter para limpiar y proc
 
 ## Requisitos
 
+### Básicos (obligatorios)
 - Python 3.x
 - tkinter (incluido con Python)
 - pyperclip
 - pyttsx3
 - gTTS (Google Text-to-Speech)
+
+### Para funciones de IA (opcional)
+- requests
+- API Key de DeepSeek (gratuita)
 
 ## Instalación
 
@@ -36,12 +49,17 @@ git clone https://github.com/pinotronic/limpiandoTextos.git
 cd limpiandoTextos
 ```
 
-2. Instalar dependencias:
+2. Instalar dependencias básicas:
 ```bash
-pip install pyperclip pyttsx3 gTTS
+pip install pyperclip pyttsx3 gTTS requests
 ```
 
-3. Ejecutar la aplicación:
+3. **OPCIONAL - Configurar IA DeepSeek:**
+   - Copia `config_ia_ejemplo.py` a `config_ia.py`
+   - Obtén tu API key gratuita en: https://platform.deepseek.com/
+   - Reemplaza `tu_api_key_aqui` con tu API key real en `config_ia.py`
+
+4. Ejecutar la aplicación:
 ```bash
 python limpiandoTexto.pyw
 ```

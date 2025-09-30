@@ -1,0 +1,10 @@
+# Dependencias básicas del proyecto
+pyperclip>=1.8.0
+pyttsx3>=2.90
+gTTS>=2.3.0
+
+# Para funciones de IA
+requests>=2.28.0
+
+# Desarrollo y testing (opcional)
+pytest>=7.0.0

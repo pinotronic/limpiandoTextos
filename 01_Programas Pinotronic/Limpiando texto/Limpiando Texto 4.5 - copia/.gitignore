@@ -52,6 +52,9 @@ temp/
 *.swp
 *.swo
 
+# Configuración de API keys (IMPORTANTE - no subir al repositorio)
+config_ia.py
+
 # Archivos de sistema
 .DS_Store
 Thumbs.db

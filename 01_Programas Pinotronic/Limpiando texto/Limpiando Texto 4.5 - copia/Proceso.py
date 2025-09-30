@@ -1,13 +1,78 @@
 import re
 import pyttsx3
 from gtts import gTTS
+try:
+    from ProcesadorIA import ProcesadorDeepSeek
+    from config_ia import DEEPSEEK_API_KEY, IA_CONFIG
+    IA_DISPONIBLE = True
+except ImportError:
+    IA_DISPONIBLE = False
+    print("Módulos de IA no disponibles. Funcionando en modo básico.")
 
 class Operativo:
     def __init__(self):
-        pass
+        self.ia_habilitada = False
+        self.procesador_ia = None
+        
+        # Inicializar IA si está disponible
+        if IA_DISPONIBLE and IA_CONFIG.get("habilitada", False):
+            try:
+                if DEEPSEEK_API_KEY and DEEPSEEK_API_KEY != "tu_api_key_aqui":
+                    self.procesador_ia = ProcesadorDeepSeek(DEEPSEEK_API_KEY)
+                    # Validar API key
+                    if self.procesador_ia.validar_api_key():
+                        self.ia_habilitada = True
+                        print("✅ IA DeepSeek inicializada correctamente")
+                    else:
+                        print("❌ Error: API key de DeepSeek inválida")
+                else:
+                    print("⚠️ Configura tu API key en config_ia.py")
+            except Exception as e:
+                print(f"❌ Error al inicializar IA: {e}")
+    
+    def habilitar_ia(self, habilitar=True):
+        """Habilita o deshabilita el uso de IA"""
+        if self.procesador_ia and IA_DISPONIBLE:
+            self.ia_habilitada = habilitar
+            return True
+        return False
+    
+    def estado_ia(self):
+        """Retorna el estado actual de la IA"""
+        return {
+            "disponible": IA_DISPONIBLE,
+            "inicializada": self.procesador_ia is not None,
+            "habilitada": self.ia_habilitada
+        }
+    
     def sustitucionTexto(self,textoOriginal,texto1,texto2):
         return textoOriginal.replace(texto1, texto2)
-    def realizandoProceso(self,Textos):
+    
+    def realizandoProceso(self,Textos, usar_ia=None):
+        """
+        Procesa el texto usando modo básico o IA según configuración
+        
+        Args:
+            Textos (str): Texto a procesar
+            usar_ia (bool, optional): Forzar uso de IA (True/False) o usar configuración actual (None)
+            
+        Returns:
+            str: Texto procesado
+        """
+        # Determinar si usar IA
+        if usar_ia is None:
+            usar_ia = self.ia_habilitada
+        elif usar_ia and not self.ia_habilitada:
+            print("⚠️ IA solicitada pero no está disponible. Usando modo básico.")
+            usar_ia = False
+            
+        if usar_ia and self.procesador_ia:
+            return self.realizandoProcesoConIA(Textos)
+        else:
+            return self.realizandoProcesoBasico(Textos)
+    
+    def realizandoProcesoBasico(self,Textos):
+        """Procesamiento básico original (sin IA)"""
         ContenedorTexto = Textos.replace(',', ', ')
         ContenedorTexto = ContenedorTexto.replace('\uf0fc ', '')
         ContenedorTexto = self.cambiandoBullets(ContenedorTexto)
@@ -22,6 +87,44 @@ class Operativo:
         ContenedorTexto = self.insertarSaltosdeLineaEstrategicos(ContenedorTexto)
         ContenedorTexto = ContenedorTexto.lstrip()
         return ContenedorTexto
+    
+    def realizandoProcesoConIA(self, Textos):
+        """Procesamiento mejorado con IA de DeepSeek"""
+        try:
+            print("🧠 Procesando con IA DeepSeek...")
+            
+            # Análisis preliminar del documento
+            info_doc = self.procesador_ia.detectar_tipo_documento(Textos)
+            print(f"📄 Tipo de documento detectado: {info_doc.get('tipo', 'desconocido')}")
+            
+            # Procesamiento básico inicial (limpieza simple)
+            ContenedorTexto = Textos.replace(',', ', ')
+            ContenedorTexto = ContenedorTexto.replace('\uf0fc ', '')
+            ContenedorTexto = self.cambiandoBullets(ContenedorTexto)
+            # Saltamos las funciones problemáticas y usamos IA en su lugar
+            ContenedorTexto = ' '.join(ContenedorTexto.split())
+            ContenedorTexto = self.cambiandoBulletsdeCinco(ContenedorTexto)
+            ContenedorTexto= ContenedorTexto.replace('\x0c', '\n ')
+            ContenedorTexto = self.limpiarTextodeSaltoLinea(ContenedorTexto)
+            
+            # Aquí es donde la IA hace la magia - reemplaza las funciones problemáticas
+            ContenedorTexto = self.procesador_ia.corregir_puntuacion_inteligente(ContenedorTexto)
+            
+            # Continuamos con el procesamiento básico final
+            ContenedorTexto = self.arreglandoNumros(ContenedorTexto)
+            ContenedorTexto = self.arregloIncisos(ContenedorTexto)
+            
+            # Procesamiento final con IA para optimizar
+            ContenedorTexto = self.procesador_ia.limpiar_texto_inteligente(ContenedorTexto)
+            
+            ContenedorTexto = ContenedorTexto.lstrip()
+            print("✅ Procesamiento con IA completado")
+            return ContenedorTexto
+            
+        except Exception as e:
+            print(f"❌ Error en procesamiento IA: {e}")
+            print("🔄 Fallback a procesamiento básico...")
+            return self.realizandoProcesoBasico(Textos)
     def cambiandoBullets(self,CambiandolosPuntos):
         CambiandolosPuntos = CambiandolosPuntos +"XXXX"
         Casilla4 = ""
@@ -57,9 +160,16 @@ class Operativo:
                 TextoFinal = TextoFinal + Final
         return TextoFinal
     def colocandoPuntosDespuesRenglon(self,ContenedorTexto):
-        # Función desactivada - ya no coloca puntos delante de letras mayúsculas
-        # Simplemente devuelve el texto sin modificaciones
-        return ContenedorTexto
+        """
+        Función mejorada - usa IA cuando está disponible, 
+        de lo contrario mantiene texto sin modificaciones
+        """
+        if self.ia_habilitada and self.procesador_ia:
+            # Usar IA para corrección inteligente de puntuación
+            return self.procesador_ia.corregir_puntuacion_inteligente(ContenedorTexto)
+        else:
+            # Modo básico - no hace cambios para evitar errores
+            return ContenedorTexto
     def colocandoPuntosEnDondeNoLosHay(self,ContenedorTexto):
         ContenedorTexto = ContenedorTexto +"XXXX"
         Casilla4 = ""
