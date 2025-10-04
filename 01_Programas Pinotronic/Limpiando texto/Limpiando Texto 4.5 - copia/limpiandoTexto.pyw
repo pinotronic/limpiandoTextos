@@ -55,6 +55,10 @@ class FRMLimpiandoTexto:
 
         self.btnLeer = tk.Button(self.top, text="🔊", font=("Segoe UI",18), command=self.leerTexto)
         self.btnLeer.place(relx=0.881, rely=0.875, height=34, width=47)
+        
+        # Botón para detener lectura (se muestra cuando está leyendo)
+        self.btnDetener = tk.Button(self.top, text="⏹", font=("Segoe UI",18), command=self.detenerLectura, state="disabled")
+        self.btnDetener.place(relx=0.776, rely=0.875, height=34, width=47)
 
         self.btnAbrir = tk.Button(self.top, text="📁", font=("Segoe UI",18), command=self.cargarTexton)
         self.btnAbrir.place(relx=0.881, rely=0.933, height=34, width=47)
@@ -101,6 +105,10 @@ class FRMLimpiandoTexto:
         self.lblProgreso.place(relx=0.35, rely=0.015, height=20, width=300)
 
         self.Operativo = Operativo()
+        
+        # Conectar el widget de texto con el sistema de resaltado TTS
+        self.Operativo.set_texto_widget(self.txtCajaTexto)
+        
         self.actualizarEstadoIA()
 
     def cargarTexton(self):
@@ -213,10 +221,43 @@ class FRMLimpiandoTexto:
         ManejoArchivo.guardarEnArchivo(textoOriginal)
 
     def leerTexto(self):
+        """Lee el texto con resaltado de palabras en tiempo real"""
         textoOriginal = self.txtCajaTexto.get(1.0, END)
-        self.Operativo.leerArchivo(textoOriginal)
+        
+        # Habilitar botón de detener, deshabilitar botón de leer
+        self.btnDetener.config(state="normal")
+        self.btnLeer.config(state="disabled")
+        
+        # Mostrar indicador de lectura
+        self.mostrarProgreso("🔊 Leyendo texto con resaltado...")
+        
+        # Iniciar lectura en un hilo separado para no bloquear la UI
+        import threading
+        def leer_thread():
+            try:
+                self.Operativo.leerArchivo(textoOriginal)
+            finally:
+                # Restaurar botones al finalizar
+                self.top.after(0, self._finalizar_lectura)
+        
+        thread = threading.Thread(target=leer_thread, daemon=True)
+        thread.start()
+    
+    def _finalizar_lectura(self):
+        """Restaura la interfaz después de terminar la lectura"""
+        self.btnDetener.config(state="disabled")
+        self.btnLeer.config(state="normal")
+        self.lblProgreso.config(text="")
+    
+    def detenerLectura(self):
+        """Detiene la lectura actual"""
+        self.Operativo.detener_lectura()
+        self._finalizar_lectura()
+        self.mostrarProgreso("⏹ Lectura detenida", tiempo_mostrar=2000)
 
     def salir(self):
+        # Detener cualquier lectura en curso antes de salir
+        self.Operativo.detener_lectura()
         sys.exit(0)
 
 if __name__ == '__main__':

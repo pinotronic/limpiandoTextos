@@ -1,10 +1,49 @@
-# Dependencias básicas del proyecto
+# ============================================
+# DEPENDENCIAS OBLIGATORIAS (Funcionamiento básico)
+# ============================================
+# Copiar/pegar texto al portapapeles
 pyperclip>=1.8.0
+
+# TTS offline - Voces del sistema Windows (OBLIGATORIO para leer texto)
 pyttsx3>=2.90
+
+# ============================================
+# DEPENDENCIAS OPCIONALES (Mejoras)
+# ============================================
+
+# TTS online - Solo si tienes conexión a Internet (OPCIONAL)
+# Si no instalas esto, el programa seguirá funcionando offline con pyttsx3
 gTTS>=2.3.0
 
-# Para funciones de IA
+# Para funciones de IA DeepSeek (OPCIONAL)
+# Si no instalas esto, el programa funciona en modo básico sin IA
 requests>=2.28.0
 
-# Desarrollo y testing (opcional)
+# ============================================
+# TTS DE ALTA CALIDAD - Piper TTS (OPCIONAL)
+# ============================================
+# Piper TTS es una opción avanzada de alta calidad completamente offline
+# No está en PyPI, se instala manualmente
+# Ver: INSTALACION_PIPER_TTS.md para instrucciones completas
+# - Voces neuronales de alta calidad
+# - Completamente offline
+# - Más natural que pyttsx3
+# - Requiere descarga manual de binarios y modelos (~50MB)
+
+# ============================================
+# ALTERNATIVAS TTS AVANZADAS (Experimentales)
+# ============================================
+# Estas son opciones más complejas para usuarios avanzados
+# NO son necesarias para el funcionamiento del programa
+
+# Coqui TTS (neural offline, pero proyecto no mantenido activamente)
+# TTS>=0.22.0
+
+# Kokoro TTS (ligero, 82M parámetros)
+# kokoro-onnx>=0.1.0
+
+# ============================================
+# DESARROLLO Y TESTING (Solo para desarrolladores)
+# ============================================
+# Opcional - Solo para ejecutar tests
 pytest>=7.0.0

@@ -38,6 +38,15 @@ temp/
 # Archivos de audio generados
 *.mp3
 *.wav
+text_to_read*
+
+# Archivos de Piper TTS (binarios no deben subirse al repo)
+piper/
+!piper/.gitkeep
+
+# Si quieres compartir Piper instalado, descomenta la siguiente línea:
+# !piper/models/*.onnx
+# !piper/models/*.json
 
 # Archivos ejecutables
 *.exe
